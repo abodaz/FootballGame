@@ -1,7 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
+﻿using UnityEngine;
+using UnityEngine.SceneManagement;
 public class ScenesManeger : MonoBehaviour {
 
 	// Use this for initialization
@@ -16,6 +14,6 @@ public class ScenesManeger : MonoBehaviour {
 
     public void Reloadlvl()
     {
-        Application.LoadLevel("1"); 
+        SceneManager.LoadScene("1"); 
     }
 }
