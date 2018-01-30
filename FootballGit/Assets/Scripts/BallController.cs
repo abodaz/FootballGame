@@ -1,7 +1,9 @@
 ﻿/*
 * GamerBox ©2018
 */
- 
+
+using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -15,9 +17,10 @@ public class BallController : MonoBehaviour
 
 
 	//Public Variables
+	public Animator playerAnimator;
 	public GameObject trailPrefab;
 	public float minDistance = 1;
-	public float speed = 3;
+	public float speed = 3, shootAnimDuration;
 	public GameObject goalText;
 
 	//Static Variables
@@ -29,7 +32,7 @@ public class BallController : MonoBehaviour
 	private Rigidbody rg, trailRb;
 	private Plane playGroundPlane;
 	private Vector3 startPos, endPos, direction;
-	private bool inRange = true, shoot = false;
+	private bool inRange = true, shoot = true;
 	#endregion
 
 	#region UnityFunctions
@@ -41,6 +44,8 @@ public class BallController : MonoBehaviour
 
 	private void FixedUpdate()
 	{
+		if (!shoot)
+			return;
 		Draw();
 	}
 
@@ -95,8 +100,8 @@ public class BallController : MonoBehaviour
 				}
 				speed = Vector3.Distance(endPos, startPos) * 30f;
 				direction = endPos - startPos;
-				rg.AddForce(direction.normalized * Time.deltaTime * speed + Vector3.up * speed / 200f, ForceMode.Impulse);
-				Debug.Log("MouseUp, Draw");
+				playerAnimator.SetTrigger("Shoot");
+				Invoke("Shoot", shootAnimDuration);
 			}
 		}
 		if (Input.GetMouseButtonUp(0))
@@ -105,5 +110,16 @@ public class BallController : MonoBehaviour
 			Destroy(trail, 3);
 		}
 	}
-#endregion
+
+	private void Shoot()
+	{
+		rg.AddForce(direction.normalized * Time.deltaTime * speed * 2 + Vector3.up * speed / 80f, ForceMode.VelocityChange);
+		rg.AddTorque(Vector3.one * speed, ForceMode.VelocityChange);
+		shoot = false;
+	}
+	private object WaitForSeconds(object shootAnim)
+	{
+		throw new NotImplementedException();
+	}
+	#endregion
 }
