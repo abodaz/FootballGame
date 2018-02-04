@@ -5,7 +5,7 @@ public class CameraController : MonoBehaviour
 {
 	#region Variables
 	public static CameraController Instance;
-	public Transform target;
+	public Transform target, lookAtTarget;
 	public float smoothSpeed = 0.2f;
 	public Vector3 offset;
 	#endregion

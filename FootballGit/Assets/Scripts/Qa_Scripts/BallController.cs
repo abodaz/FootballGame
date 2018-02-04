@@ -79,61 +79,82 @@ public class BallController : MonoBehaviour
 	}
 	private void Draw()
 	{
-		if (Input.touchCount > 0 || Input.GetMouseButton(0))
+		if (Input.touchCount > 0 || Input.GetMouseButton(0) && inRange)
 		{
 			//Touch touch = Input.GetTouch(0);
-
-			if (inRange)
+			if (/*touch.phase == TouchPhase.Began ||*/ Input.GetMouseButtonDown(0))
 			{
-				if (/*touch.phase == TouchPhase.Began ||*/ Input.GetMouseButtonDown(0))
+				Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+				float rayDistance;
+				if (playGroundPlane.Raycast(ray, out rayDistance))
 				{
-					Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-					float rayDistance;
-					if (playGroundPlane.Raycast(ray, out rayDistance))
+					trail = (GameObject)Instantiate(trailPrefab, ray.GetPoint(rayDistance), Quaternion.identity);
+					trailRb = trail.GetComponent<Rigidbody>();
+					startPos = ray.GetPoint(rayDistance);
+					if (Vector3.Distance(startPos, transform.position) > minDistance)
 					{
-						trail = (GameObject)Instantiate(trailPrefab, ray.GetPoint(rayDistance), Quaternion.identity);
-						trailRb = trail.GetComponent<Rigidbody>();
-						startPos = ray.GetPoint(rayDistance);
-						if (Vector3.Distance(startPos, transform.position) > minDistance)
-						{
-							inRange = false;
-						}
+						inRange = false;
+						return;
 					}
-				}
-				else if ((/*touch.phase == TouchPhase.Moved || */Input.GetMouseButton(0)) && trail != null)
-				{
-					Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-					float rayDistance;
-					if (playGroundPlane.Raycast(ray, out rayDistance))
-					{
-						trail.transform.position = ray.GetPoint(rayDistance);
-					}
-				}
-				else if (/*touch.phase == TouchPhase.Ended ||*/ Input.GetMouseButtonUp(0))
-				{
-					Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-					float rayDistance;
-					if (playGroundPlane.Raycast(ray, out rayDistance))
-					{
-						endPos = ray.GetPoint(rayDistance);
-					}
-					speed = Vector3.Distance(endPos, startPos) * 30f;
-					direction = endPos - startPos;
-					playerAnimator.SetTrigger("Shoot");
-					Invoke("Shoot", shootAnimDuration);
 				}
 			}
-			if ((/*touch.phase == TouchPhase.Ended ||*/ Input.GetMouseButtonUp(0))&& Vector3.Distance(endPos, startPos) <= 0.1f)
+			if ((/*touch.phase == TouchPhase.Moved || */Input.GetMouseButton(0)) && trail != null)
 			{
-				inRange = true;
-				Destroy(trail, 3);
+				Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+				float rayDistance;
+				if (playGroundPlane.Raycast(ray, out rayDistance))
+				{
+					trail.transform.position = ray.GetPoint(rayDistance);
+				}
+			}
+			if (/*touch.phase == TouchPhase.Ended ||*/ Input.GetMouseButtonUp(0))
+			{
+				Debug.Log("Play The Animation");
+				Destroy(trail, 2);
+				Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+				float rayDistance;
+				if (playGroundPlane.Raycast(ray, out rayDistance))
+				{
+					endPos = ray.GetPoint(rayDistance);
+				}
+				speed = Vector3.Distance(endPos, startPos) * 30f;
+				direction = endPos - startPos;
+				Debug.Log("Play The Animation");
+				playerAnimator.SetTrigger("Shoot");
+				Invoke("Shoot", shootAnimDuration);
 			}
 		}
-	}
+		if (/*touch.phase == TouchPhase.Ended ||*/ Input.GetMouseButtonUp(0))
+		{
+			Destroy(trail, 2);
+			Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+			float rayDistance;
+			if (playGroundPlane.Raycast(ray, out rayDistance))
+			{
+				endPos = ray.GetPoint(rayDistance);
+			}
 
+			//Debug.Log(Vector3.Distance(startPos, endPos) + "" + inRange);
+			//UnityEditor.EditorApplication.isPaused = true;
+			if (!inRange || startPos.z >= endPos.z || Vector3.Distance(startPos, endPos) > 200)
+			{
+				Debug.Log("Fault");
+				Destroy(trail);
+				inRange = true;
+				return;
+			}
+
+			speed = Vector3.Distance(endPos, startPos) * 30f;
+			direction = endPos - startPos;
+			Debug.Log("Play The Animation");
+			playerAnimator.SetTrigger("Shoot");
+			Invoke("Shoot", shootAnimDuration);
+		}
+	}
 	private void Shoot()
 	{
-		 AudioManager.audioSource.PlayOneShot(shootEffect, 1);
+		Debug.Log("Shooooot!");
+		AudioManager.audioSource.PlayOneShot(shootEffect, 1);
 		rg.AddForce(direction.normalized * Time.deltaTime * speed * 2 + Vector3.up * speed / 80f, ForceMode.VelocityChange);
 		rg.AddTorque(Vector3.one * speed, ForceMode.VelocityChange);
 		shoot = false;
